@@ -1,3 +1,6 @@
+
+//TODO: Find a way to write these shaders in a way that is more readable while still staying parsable.
+//TODO: Also make that 2d position into a 2d vector. Just set z to 0.0
 var vertexShaderText =
 //Simpler way for now just to set up a shader using an array
 [
@@ -16,6 +19,7 @@ var vertexShaderText =
 ' gl_Position = mProj * mView * mWorld * vec4(vertPosition, 0.0, 1.0);',
  //gl_position is a 4D variable(vertPosition defines x and y, 0.0 is z, 1.0 idk
  //multiplying matrices together to get position..  order matters ..mWorld * vec4(vertPosition, 0.0, 1.0) rotates cube then multiplied by mView(where the camera is located) multiplied by mProj to get the nice points from before
+ //NOTE: One possible explanation for the seemingly arbitrary 4th dimension of gl_Position vector could simply be an addition with the sole purpose of being able to multiply the 4x4 matrix by the position vector. Keep in mind that you can not multiply a 4x4 matrix by a 3d vector. That being said, why are the matrices 4x4 to begin with?
 '}'
 ].join("\n");
 
@@ -130,7 +134,7 @@ var InitDemo = function () {
   var viewMatrix = new Float32Array(16);
   var projMatrix = new Float32Array(16);
   mat4.identity(worldMatrix);
-  mat4.lookAt(viewMatrix, [0, 0, -5], [0, 0, 0], [0, 1, 0]);//make a camera, lookAt takes 3 parameters 3d vector for positon of viewer -5 in this instance is 5 units away try -2 and see what happens, where they're looking at, and up
+  mat4.lookAt(viewMatrix, [0, 0, -2], [0, 0, 0], [0, 1, 0]);//make a camera, lookAt takes 3 parameters 3d vector for positon of viewer -5 in this instance is 5 units away try -2 and see what happens, where they're looking at, and up
   mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width/ canvas.height, 0.1, 1000.0);
 
 //Now time to send these matrices to the shader
@@ -144,6 +148,7 @@ var InitDemo = function () {
   var angle = 0;
   var loop = function () {
       angle = performance.now() / 1000 / 6 * 2 * Math.PI;
+      //One full rotation every 6 seconds
       //for the rotate function below the first parameter is the output, the second is the original matrix, the third is the angle, fouth is the axis which we will be rotating
       mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
       //rotate the worldMatrix about the identityMatrix on angle around the y axis in this case
@@ -151,7 +156,6 @@ var InitDemo = function () {
 
       gl.clearColor(0.75, 0.85, 0.8, 1.0);
       gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-      //One full rotation every 6 seconds
       gl.drawArrays(gl.TRIANGLES, 0, 3);
 
       requestAnimationFrame(loop);
