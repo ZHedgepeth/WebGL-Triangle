@@ -6,12 +6,16 @@ var vertexShaderText =
 'attribute vec2 vertPosition;',
 'attribute vec3 vertColor;',
 'varying vec3 fragColor;',
+'uniform mat4 mWorld;',
+'uniform mat4 mView;',
+'uniform mat4 mProj;',
 '',
 'void main()',
 '{',
 ' fragColor = vertColor;',
-' gl_Position = vec4(vertPosition, 0.0, 1.0);',
+' gl_Position = mProj * mView * mWorld * vec4(vertPosition, 0.0, 1.0);',
  //gl_position is a 4D variable(vertPosition defines x and y, 0.0 is z, 1.0 idk
+ //multiplying matrices together to get position..  order matters ..mWorld * vec4(vertPosition, 0.0, 1.0) rotates cube then multiplied by mView(where the camera is located) multiplied by mProj to get the nice points from before
 '}'
 ].join("\n");
 
@@ -81,10 +85,10 @@ var InitDemo = function () {
 
   //Create Buffer
   var triangleVerticies =
-  [//X    Y          R    G    B
-    0.0, 0.5,       1.0, 1.0, 0.0,
-    -0.5, -0.5,     0.5, 0.0, 1.0,
-    0.5, -0.5,       0.1, 1.0, 0.9
+  [//X    Y    Z           R    G    B
+    0.0, 0.5, 0.0,       1.0, 1.0, 0.0,
+    -0.5, -0.5, 0.0,     0.5, 0.0, 1.0,
+    0.5, -0.5, 0.0,      0.1, 1.0, 0.9
   ];
 
   var triangVertexBufferObject = gl.createBuffer();
