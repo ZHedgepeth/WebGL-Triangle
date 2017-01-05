@@ -100,10 +100,10 @@ var InitDemo = function () {
   var colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
   gl.vertexAttribPointer(
     positionAttribLocation, //Attribute location
-    2, //Number of elements per attribute
+    3, //Number of elements per attribute
     gl.FLOAT, //Type of elements
     gl.false,
-    5 * Float32Array.BYTES_PER_ELEMENT,// Size of an individual vertex
+    6 * Float32Array.BYTES_PER_ELEMENT,// Size of an individual vertex
     0//Offset from the beginning of a single vertex to this attribute
   );
   gl.vertexAttribPointer(
@@ -111,15 +111,50 @@ var InitDemo = function () {
     3, //Number of elements per attribute
     gl.FLOAT, //Type of elements
     gl.false,
-    5 * Float32Array.BYTES_PER_ELEMENT,// Size of an individual vertex
-    2 * Float32Array.BYTES_PER_ELEMENT
+    6 * Float32Array.BYTES_PER_ELEMENT,// Size of an individual vertex
+    3 * Float32Array.BYTES_PER_ELEMENT
   );
 
   gl.enableVertexAttribArray(positionAttribLocation);
   gl.enableVertexAttribArray(colorAttribLocation);
 
-  //Main render loop
-  gl.useProgram(program);
-  gl.drawArrays(gl.TRIANGLES, 0, 3)
+  //After going through and doing everything with the attributes time to get our uniforms
+  //Tell Open GL which state we are in
+  gl.useProgram(program)
 
+  var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld');
+  var matViewUniformLocation = gl.getUniformLocation(program, 'mView');
+  var matProjUniformLocation = gl.getUniformLocation(program, 'mProj');
+
+  var worldMatrix = new Float32Array(16);
+  var viewMatrix = new Float32Array(16);
+  var projMatrix = new Float32Array(16);
+  mat4.identity(worldMatrix);
+  mat4.lookAt(viewMatrix, [0, 0, -5], [0, 0, 0], [0, 1, 0]);//make a camera, lookAt takes 3 parameters 3d vector for positon of viewer -5 in this instance is 5 units away try -2 and see what happens, where they're looking at, and up
+  mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width/ canvas.height, 0.1, 1000.0);
+
+//Now time to send these matrices to the shader
+  gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+  gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
+  gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
+  //Main render loop
+
+  var identityMatrix = new Float32Array(16);
+  mat4.identity(identityMatrix);
+  var angle = 0;
+  var loop = function () {
+      angle = performance.now() / 1000 / 6 * 2 * Math.PI;
+      //for the rotate function below the first parameter is the output, the second is the original matrix, the third is the angle, fouth is the axis which we will be rotating
+      mat4.rotate(worldMatrix, identityMatrix, angle, [0, 1, 0]);
+      //rotate the worldMatrix about the identityMatrix on angle around the y axis in this case
+      gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+
+      gl.clearColor(0.75, 0.85, 0.8, 1.0);
+      gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+      //One full rotation every 6 seconds
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
 };
